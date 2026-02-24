@@ -1,22 +1,45 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { and, eq, gt, isNull, lt, ne } from 'drizzle-orm';
+import { and, eq, gt, ilike, isNull, lt, ne, sql } from 'drizzle-orm';
 
 import { bookings } from '../schemas/bookings.schema';
 import { BookingStatus } from '../../../../../core/domain/value-objects/booking-status';
 
 import type { BookingRepoPort } from '../../../../../core/application/ports/booking-repo.port';
-import type { FutureBookRecord } from '../../../../../core/application/dtos/booking.dto';
+import type { BookingFilters, BookingRecord, FutureBookRecord, FutureWindow } from '../../../../../core/application/dtos/booking.dto';
 import type { PrimitiveBooking } from '../../../../../core/domain/entities/booking.entity';
 
 export class DrizzleBookingRepository implements BookingRepoPort {
   constructor(private readonly db: ReturnType<typeof drizzle>) {}
 
-  async findFutureByDateRange(params: { start: Date, end: Date, now: Date }): Promise<FutureBookRecord[]> {
+  async searchBookings(params: BookingFilters, window: FutureWindow): Promise<BookingRecord[]> {
+    const graceMs = window.graceTimeMinutes * 60_000;
+    const minNow = new Date(window.now.getTime() - graceMs);
+
+    const where = and(
+      isNull(bookings.deletedAt),
+      gt(bookings.endsAt, minNow),
+
+      lt(bookings.startsAt, params.endsAt),
+      gt(bookings.endsAt, params.startsAt),
+
+      ne(bookings.statusId, BookingStatus.Cancelled),
+
+      params.roomId ? eq(bookings.roomId, params.roomId) : undefined,
+      params.departmentId ? eq(bookings.departmentId, params.departmentId) : undefined,
+      params.statusId ? eq(bookings.statusId, params.statusId) : undefined,
+      params.search?.trim()
+        ? ilike(
+            sql`${bookings.requester} || ' ' || ${bookings.title} || ' ' || coalesce(${bookings.description}, '')`,
+            `%${params.search.trim()}%`
+          )
+        : undefined
+    );
+
     const rows = await this.db
       .select({
         id: bookings.id,
-        reference: bookings.reference,
         roomId: bookings.roomId,
+        departmentId: bookings.departmentId,
         requester: bookings.requester,
         title: bookings.title,
         description: bookings.description,
@@ -26,15 +49,7 @@ export class DrizzleBookingRepository implements BookingRepoPort {
         statusId: bookings.statusId,
       })
       .from(bookings)
-      .where(
-        and(
-          isNull(bookings.deletedAt),
-          gt(bookings.endsAt, params.now),
-          lt(bookings.startsAt, params.end),
-          gt(bookings.endsAt, params.start),
-          ne(bookings.statusId, BookingStatus.Cancelled)
-        )
-      );
+      .where(where);
 
     return rows;
   }
@@ -43,6 +58,7 @@ export class DrizzleBookingRepository implements BookingRepoPort {
     await this.db.insert(bookings).values({
       reference: params.reference,
       roomId: params.roomId,
+      departmentId: params.departmentId,
       requester: params.requester,
       title: params.title,
       description: params.description,

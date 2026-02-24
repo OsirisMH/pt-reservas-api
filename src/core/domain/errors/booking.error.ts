@@ -11,8 +11,8 @@ export class InvalidBookingDateRangeError extends DomainError {
   }
 }
 
-export class BookingInPastError extends DomainError {
+export class BookingTooOldError extends DomainError {
   constructor() {
-    super("Cannot create booking in the past");
+    super("Booking start time exceeds the allowed past tolerance");
   }
 }

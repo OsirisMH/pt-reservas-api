@@ -1,13 +1,15 @@
 import type { BookingStatus } from "../value-objects/booking-status"
+import { BookingPolicy } from "../policies/booking.policy"
 
 import type { ClockPort } from "../../shared/ports/clock.port"
+import { BookingTooOldError, BookingTooShortError, InvalidBookingDateRangeError } from "../errors/booking.error"
 
-import { BookingInPastError, BookingTooShortError, InvalidBookingDateRangeError } from "../errors/booking.error"
 
 export type PrimitiveBooking = {
   id?: number
   reference: string
   roomId: number
+  departmentId: number
   requester: string
   title: string
   description?: string
@@ -26,10 +28,12 @@ export type PrimitiveBooking = {
 
 export class BookingEntity {
   private static readonly minDuration = 15;
+  private static readonly graceTimeMinutes = 30;
 
   private constructor(
     private readonly reference: string,
     private readonly roomId: number,
+    private readonly departmentId: number,
     private readonly requester: string,
     private readonly title: string,
     private readonly startsAt: Date,
@@ -45,7 +49,7 @@ export class BookingEntity {
   ) {}
 
   static create(params: PrimitiveBooking, clock: ClockPort): BookingEntity {
-    this.assertNotInPast(params.startsAt, clock);
+    this.assertNotTooOld(params.startsAt, clock);
     this.assertDuration(params.startsAt, params.endsAt);
     this.assertDateRange(params.startsAt, params.endsAt);
 
@@ -53,6 +57,7 @@ export class BookingEntity {
     return new BookingEntity(
       params.reference,
       params.roomId,
+      params.departmentId,
       params.requester,
       params.title,
       params.startsAt,
@@ -73,6 +78,7 @@ export class BookingEntity {
       id: this.id,
       reference: this.reference,
       roomId: this.roomId,
+      departmentId: this.departmentId,
       requester: this.requester,
       title: this.title,
       description: this.description,
@@ -100,7 +106,12 @@ export class BookingEntity {
     if (startsAt >= endsAt) throw new InvalidBookingDateRangeError();
   }
 
-  private static assertNotInPast(startsAt: Date, clock: ClockPort) {
-    if (startsAt.getTime() < clock.now().getTime()) throw new BookingInPastError()
+  private static assertNotTooOld(startsAt: Date, clock: ClockPort) {
+    const now = clock.now().getTime();
+    const graceMs = BookingPolicy.PAST_GRACE_MINUTES * 60 * 1000;
+
+    if (startsAt.getTime() < (now - graceMs)) {
+      throw new BookingTooOldError();
+    }
   }
 }

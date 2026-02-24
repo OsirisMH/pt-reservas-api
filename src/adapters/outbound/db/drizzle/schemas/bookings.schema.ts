@@ -12,6 +12,8 @@ export const bookings = pgTable('reservas',   {
       .notNull()
       .references(() => rooms.id),
 
+    departmentId: bigint("departamento_id", { mode: "number" }).notNull(),
+    
     requester: varchar("solicitante", { length: 120 }).notNull(),
 
     title: varchar("titulo", { length: 160 }).notNull(),

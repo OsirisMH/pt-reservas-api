@@ -1,26 +1,18 @@
 import type { BookingRepoPort } from '../ports/booking-repo.port';
 import type { ClockPort } from '../../shared/ports/clock.port';
+import type { BookingFilters } from '../dtos/booking.dto';
+import { BookingPolicy } from '../../domain/policies/booking.policy';
 
-import { BadRequestError } from '../errors/http.error';
-
-type Input = { start: Date, end: Date };
-
-export class GetFutureBookingsUseCase {
+export class SearchBookingsUseCase {
   constructor(
     private readonly bookingRepo: BookingRepoPort,
-    private readonly clock: ClockPort
+    private readonly clock: ClockPort,
   ) {}
 
-  async execute(input: Input): Promise<any[]> {
-    const { start, end } = input;
-    console.log(start, end)
-
-    if (this.clock.isBefore(end, start)) throw new BadRequestError('Invalid date range');
-
-    const bookings = await this.bookingRepo.findFutureByDateRange({
-      start,
-      end,
+  async execute(input: BookingFilters): Promise<any[]> {
+    const bookings = await this.bookingRepo.searchBookings(input, {
       now: this.clock.now(),
+      graceTimeMinutes: BookingPolicy.PAST_GRACE_MINUTES,
     });
 
     return bookings;

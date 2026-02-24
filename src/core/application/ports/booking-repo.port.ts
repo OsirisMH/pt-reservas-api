@@ -1,10 +1,8 @@
 import type { PrimitiveBooking } from "../../domain/entities/booking.entity";
-import type { FutureBookRecord } from "../dtos/booking.dto";
+import type { BookingFilters, BookingRecord, FutureWindow } from "../dtos/booking.dto";
 
 export interface BookingRepoPort {
-  findFutureByDateRange: (parmas: { start: Date, end: Date, now: Date }) => Promise<FutureBookRecord[]>
-
+  searchBookings: (params: BookingFilters, window: FutureWindow) => Promise<BookingRecord[]>
   existsOverlapping(params: { roomId: number; start: Date; end: Date }): Promise<boolean>;
-
   create(params: PrimitiveBooking): Promise<void>;
 }

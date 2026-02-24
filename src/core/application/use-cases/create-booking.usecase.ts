@@ -11,6 +11,7 @@ export type CreateBookingInput = {
   title: string;
   description?: string;
   roomId: number;
+  departmentId: number;
   requester: string;
   startsAt: Date;
   endsAt: Date;
@@ -24,7 +25,7 @@ export class CreateBookingUseCase {
   ) {}
 
   async execute(input: CreateBookingInput): Promise<string> {
-    const { title, description, roomId, requester, startsAt, endsAt } = input;
+    const { title, description, roomId, departmentId, requester, startsAt, endsAt } = input;
 
     const roomOk = await this.roomRepo.existsActive(roomId);
     if (!roomOk) throw new NotFoundError('Room not found');
@@ -35,6 +36,7 @@ export class CreateBookingUseCase {
       title,
       description,
       roomId,
+      departmentId,
       requester,
       startsAt,
       endsAt,

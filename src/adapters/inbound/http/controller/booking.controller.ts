@@ -1,20 +1,20 @@
 import type { Request, Response, NextFunction } from 'express';
 
-import type { GetFutureBookingsUseCase } from '../../../../core/application/use-cases/get-future-bookings.usecase';
 import type { CreateBookingUseCase } from '../../../../core/application/use-cases/create-booking.usecase';
 
-import type { CreateBookingBody, GetFutureBookingsQuery } from '../schemas/booking.schemas';
+import type { CreateBookingBody, SearchBookingsQuery } from '../schemas/booking.schema';
+import type { SearchBookingsUseCase } from '../../../../core/application/use-cases/get-future-bookings.usecase';
 
 export class BookingController {
   constructor(
-    private readonly getFutureBookings: GetFutureBookingsUseCase,
+    private readonly searchBookings: SearchBookingsUseCase,
     private readonly createBooking: CreateBookingUseCase,
   ) {}
 
-  getFutureBookingsHandler = async (req: Request, res: Response, next: NextFunction) => {
+  searchBookingsHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = req.validatedQuery as GetFutureBookingsQuery; 
-      const result = await this.getFutureBookings.execute(query);
+      const query = req.validatedQuery as SearchBookingsQuery; 
+      const result = await this.searchBookings.execute(query);
       res.status(200).json(result);
     } catch (e) { next(e); }
   };
@@ -28,42 +28,31 @@ export class BookingController {
 
   getByReferenceHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(req.query)
-      const query = req.validatedQuery as GetFutureBookingsQuery; 
-      const result = await this.getFutureBookings.execute(query);
-      res.status(200).json(result);
+      res.status(200).json();
     } catch (e) { next(e); }
   };
 
   getBookingsSummaryHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = req.validatedQuery as GetFutureBookingsQuery; 
-      const result = await this.getFutureBookings.execute(query);
-      res.status(200).json(result);
+      res.status(200).json();
     } catch (e) { next(e); }
   };
 
   getBookingsHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = req.validatedQuery as GetFutureBookingsQuery; 
-      const result = await this.getFutureBookings.execute(query);
-      res.status(200).json(result);
+      res.status(200).json();
     } catch (e) { next(e); }
   };
 
   updateStatusHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = req.validatedQuery as GetFutureBookingsQuery; 
-      const result = await this.getFutureBookings.execute(query);
-      res.status(200).json(result);
+      res.status(200).json();
     } catch (e) { next(e); }
   };
 
   updateBookingHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = req.validatedQuery as GetFutureBookingsQuery; 
-      const result = await this.getFutureBookings.execute(query);
-      res.status(200).json(result);
+      res.status(200).json();
     } catch (e) { next(e); }
   };
 }
