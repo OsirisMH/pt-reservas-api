@@ -3,7 +3,7 @@ import { Router } from "express";
 import { ensureCredentials } from "../middlewares/ensure-credentials";
 import type { BookingController } from "../controller/booking.controller";
 import { validateBody } from "../middlewares/validate-body";
-import { createBookingSchema, searchBookingsSchema } from "../schemas/booking.schema";
+import { createBookingSchema, searchBookingsSchema, updateBookingSchema } from "../schemas/booking.schema";
 import { validateQuery } from "../middlewares/validate-query";
 
 export const buildBookingRoutes = (controller: BookingController) => {
@@ -17,9 +17,8 @@ export const buildBookingRoutes = (controller: BookingController) => {
 
   // PRIVATE
   r.use(ensureCredentials);
-  r.get("/", controller.getBookingsHandler);
-  r.patch("/:id/status", controller.updateStatusHandler);
-  r.patch("/:id", controller.updateBookingHandler);
+  r.patch("/:reference", validateBody(updateBookingSchema), controller.updateBookingHandler);
+  r.get("/", validateQuery(searchBookingsSchema), controller.searchBookingsHandler);
 
   return r;
 };

@@ -5,7 +5,9 @@ import { DateFnsClock } from '../adapters/outbound/security/date-fns.clock';
 import { BookingController } from '../adapters/inbound/http/controller/booking.controller';
 import { CreateBookingUseCase } from '../core/application/use-cases/create-booking.usecase';
 import { DrizzleRoomRepository } from '../adapters/outbound/db/drizzle/repositories/drizzle-room.repository';
-import { SearchBookingsUseCase } from '../core/application/use-cases/get-future-bookings.usecase';
+import { SearchBookingsUseCase } from '../core/application/use-cases/search-bookings.usecase';
+import { GetBookingsByReferenceUseCase } from '../core/application/use-cases/get-booking-by-reference.usecase';
+import { UpdateBookingByReferenceUseCase } from '../core/application/use-cases/update-booking-by-reference-usecase';
 
 export const buildBookingModule = (ctx: AppContext) => {
   const bookingRepo = new DrizzleBookingRepository(ctx.db);
@@ -14,8 +16,10 @@ export const buildBookingModule = (ctx: AppContext) => {
 
   const searchBookings = new SearchBookingsUseCase(bookingRepo, clock);
   const createBooking = new CreateBookingUseCase(bookingRepo, roomRepo, clock);
+  const getBookingByReference = new GetBookingsByReferenceUseCase(bookingRepo);
+  const updateBooking = new UpdateBookingByReferenceUseCase(bookingRepo, roomRepo, clock);
 
-  const controller = new BookingController(searchBookings, createBooking);
+  const controller = new BookingController(searchBookings, createBooking, getBookingByReference, updateBooking);
 
   return { controller };
 };

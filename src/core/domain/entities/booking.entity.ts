@@ -48,8 +48,8 @@ export class BookingEntity {
     private readonly description?: string,
   ) {}
 
-  static create(params: PrimitiveBooking, clock: ClockPort): BookingEntity {
-    this.assertNotTooOld(params.startsAt, clock);
+  static create(params: PrimitiveBooking, clock: ClockPort, noValidateAssertNotTooOld = false): BookingEntity {
+    if (!noValidateAssertNotTooOld) this.assertNotTooOld(params.startsAt, clock);
     this.assertDuration(params.startsAt, params.endsAt);
     this.assertDateRange(params.startsAt, params.endsAt);
 

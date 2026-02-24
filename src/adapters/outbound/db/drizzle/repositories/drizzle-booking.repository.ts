@@ -38,6 +38,7 @@ export class DrizzleBookingRepository implements BookingRepoPort {
     const rows = await this.db
       .select({
         id: bookings.id,
+        reference: bookings.reference,
         roomId: bookings.roomId,
         departmentId: bookings.departmentId,
         requester: bookings.requester,
@@ -86,5 +87,49 @@ export class DrizzleBookingRepository implements BookingRepoPort {
       .limit(1);
 
     return rows.length > 0;
+  }
+
+  async getByReference(reference: string): Promise<BookingRecord | null | undefined> {
+    const row = await this.db
+      .select({
+        id: bookings.id,
+        reference: bookings.reference,
+        roomId: bookings.roomId,
+        departmentId: bookings.departmentId,
+        requester: bookings.requester,
+        title: bookings.title,
+        description: bookings.description,
+        startsAt: bookings.startsAt,
+        endsAt: bookings.endsAt,
+        cancellationReason: bookings.cancellationReason,
+        statusId: bookings.statusId,
+      })
+      .from(bookings)
+      .where(
+        eq(bookings.reference, reference)
+      )
+      .limit(1);
+
+    if (!row.length) {
+      return null;
+    }
+
+    return row[0];
+  }
+
+  async updateByReference(reference: string, payload: PrimitiveBooking): Promise<void> {
+    await this.db
+      .update(bookings)
+      .set({
+        ...payload,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(bookings.reference, reference),
+          isNull(bookings.deletedAt),
+        )
+      )
+      .returning({ id: bookings.id });
   }
 }

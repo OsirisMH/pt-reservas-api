@@ -1,5 +1,6 @@
 export type BookingRecord = {
   id: number;
+  reference: string;
   roomId: number;
   departmentId: number;
   requester: string;

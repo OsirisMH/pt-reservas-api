@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const createBookingSchema = z
   .object({
@@ -24,12 +24,11 @@ export const createBookingSchema = z
     path: ["endsAt"],
   })
   .refine(
-    (data) =>
-      (data.endsAt.getTime() - data.startsAt.getTime()) >= 15 * 60 * 1000,
+    (data) => data.endsAt.getTime() - data.startsAt.getTime() >= 15 * 60 * 1000,
     {
       message: "Minimum booking duration is 15 minutes",
       path: ["endsAt"],
-    }
+    },
   );
 
 export const searchBookingsSchema = z
@@ -56,11 +55,34 @@ export const searchBookingsSchema = z
       return data.startsAt < data.endsAt;
     },
     {
+      message: "startsAt must be before endsAt",
+      path: ["endsAt"],
+    },
+  );
+
+export const updateBookingSchema = z
+  .object({
+    roomId: z.coerce.number().int().positive().optional(),
+    departmentId: z.coerce.number().int().positive().optional(),
+    requester: z.string().trim().min(1).max(120).optional(),
+    title: z.string().trim().min(3).max(200).optional(),
+    description: z.string().trim().max(1000).nullable().optional(),
+    startsAt: z.coerce.date().optional(),
+    endsAt: z.coerce.date().optional(),
+    statusId: z.coerce.number().int().positive().optional(),
+    cancellationReason: z.string().trim().max(500).nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.startsAt || !data.endsAt) return true;
+      return data.startsAt < data.endsAt;
+    },
+    {
       message: 'startsAt must be before endsAt',
       path: ['endsAt'],
     }
   );
 
-
 export type CreateBookingBody = z.infer<typeof createBookingSchema>;
+export type UpdateBookingBody = z.infer<typeof updateBookingSchema>;
 export type SearchBookingsQuery = z.infer<typeof searchBookingsSchema>;
